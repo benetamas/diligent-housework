@@ -1,4 +1,17 @@
 services:
+
+  web:
+    image: nginx
+    volumes:
+      - ./nginx_templates:/etc/nginx/templates
+    ports:
+      - "8080:80"
+    environment:
+      - NGINX_HOST=movie-search.lycantrop.hu
+      - NGINX_PORT=80
+    depends_on:
+      - app
+
   app:
     build: .
     command: bash -c "rm -f tmp/pids/server.pid && bundle exec rails assets:precompile && bundle exec rails server -b 0.0.0.0"
