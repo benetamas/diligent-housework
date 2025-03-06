@@ -1,0 +1,39 @@
+<% if @movies.present? %>
+  <div class="row row-margin">
+    <div class="col">
+      <p id="popup-alert" class="alert alert-<%= @client.data_source == 'cache' ? 'primary' : 'secondary' %>">
+        Results from
+        <strong>
+          <%= @client.data_source %>
+          <% if @client.data_source == 'cache' %>
+            (hit: <%= @client.hit_count %>)
+          <% end %>
+        </strong>
+      </p>
+    </div>
+  </div>
+  <div class="row row-margin">
+    <% @movies.each do |movie| %>
+      <div class="col-3 col-margin">
+        <div class="card">
+          <img src="https://image.tmdb.org/t/p/w500<%= movie.poster_path %>" alt="<%= movie.title %>" class="card-img-top">
+          <div class="card-body">
+            <div class="card-title"><%= movie.title %></div>
+            <p class="card-text"><%= movie.overview %></p>
+          </div>
+        </div>
+      </div>
+    <% end %>
+  </div>
+  <div class="row row-margin">
+    <div class="col">
+      <%= paginate @movies.pagination, theme: 'bootstrap5', remote: true %>
+    </div>
+  </div>
+<% else %>
+  <div class="row">
+    <div class="col">
+      <p>Please type your keywords to the input box!</p>
+    </div>
+  </div>
+<% end %>

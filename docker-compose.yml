@@ -1,0 +1,63 @@
+services:
+  app:
+    build: .
+    command: bash -c "rm -f tmp/pids/server.pid && bundle exec rails assets:precompile && bundle exec rails server -b 0.0.0.0"
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db
+      - memcached
+    environment:
+      NODE_OPTIONS: --openssl-legacy-provider
+      RAILS_SERVE_STATIC_FILES: true
+      RAILS_MASTER_KEY_FILE: /run/secrets/master_key
+      MYSQL_USER_FILE: /run/secrets/db_user
+      MYSQL_PASSWORD_FILE: /run/secrets/db_user_password
+      MYSQL_DATABASE_FILE: /run/secrets/db_name
+      RAILS_ENV: production
+      MYSQL_HOST: db
+      CACHE_STORE: mem_cache_store
+      MEMCACHE_SERVERS: memcached:11211
+    secrets:
+      - db_user
+      - db_user_password
+      - db_name
+      - master_key
+
+  db:
+    image: mysql:8.0
+    container_name: rails_db
+    restart: always
+    environment:
+      MYSQL_USER_FILE: /run/secrets/db_user
+      MYSQL_PASSWORD_FILE: /run/secrets/db_user_password
+      MYSQL_DATABASE_FILE: /run/secrets/db_name
+      MYSQL_RANDOM_ROOT_PASSWORD: 'yes'
+    volumes:
+      - mysql_data:/var/lib/mysql
+    ports:
+      - "6033:3306"
+    secrets:
+      - db_user
+      - db_user_password
+      - db_name
+
+  memcached:
+    image: memcached:latest
+    container_name: memcached
+    restart: always
+    ports:
+      - "11211:11211"
+
+secrets:
+  db_user:
+    file: ./docker/db_user.txt
+  db_user_password:
+    file: ./docker/db_user_password.txt
+  db_name:
+    file: ./docker/db_name.txt
+  master_key:
+    file: config/master.key
+
+volumes:
+  mysql_data:

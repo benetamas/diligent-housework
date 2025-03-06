@@ -1,0 +1,21 @@
+<div class="container">
+
+  <% if flash[:alert] %>
+    <p class="alert alert-danger"><%= flash[:alert] %></p>
+  <% end %>
+
+  <%= form_with url: root_path, method: :get, local: false, id: :search do |f| %>
+    <div class="row row-margin">
+      <div class="col-10">
+        <%= f.text_field :query, type: 'text', class: 'form-control', value: @params.query, placeholder: 'Type your keywords' %>
+      </div>
+      <div class="col-2 d-flex justify-content-end">
+        <button type="submit" class="btn btn-primary">Search</button>
+      </div>
+    </div>
+  <% end %>
+
+  <div id="movies">
+    <%= render template: 'dashboard/movies' %>
+  </div>
+</div>
