@@ -9,9 +9,9 @@ class MoviesClient
 
   attr_reader :query_string, :page, :data_source
 
-  def initialize(query_string, page = 1)
+  def initialize(query_string, page_number = 1)
     @query_string = query_string.to_s
-    @page = calculate_page(page)
+    @page = calculate_page(page_number)
     @data_source = 'cache'
   end
 
@@ -19,8 +19,8 @@ class MoviesClient
     @query_string = string.to_s
   end
 
-  def page=(number)
-    @page = number.to_i
+  def page=(page_number)
+    @page = calculate_page(page_number)
   end
 
   def search
@@ -43,26 +43,16 @@ class MoviesClient
     Movies.load_by_response_json(data)
   end
 
-  def inspect_cache
-    %w[page hit].each { |key| puts "#{cache_key(key)}: #{Rails.cache.read(cache_key(key))}" }
-    true
-  end
-
   def hit_count
     Rails.cache.read(cache_key('hit'))
   end
 
   def get_movies_data_from_server
-    puts "Fetch from API, query: #{normalized_query_string}"
+    Rails.logger.debug "Fetch from API, query: #{normalized_query_string}"
     @data_source = 'API'
     response = RestClient::Request.execute(method: :get, url: BASE_URL, headers: {
-      Authorization: "Bearer #{Rails.application.credentials.api_read_access_token}",
-      params: {
-        query: normalized_query_string,
-        include_adult: false,
-        language: 'en-US',
-        page: page
-      }
+      Authorization: calculate_authorization_param,
+      params: calculate_api_params
     })
     JSON.parse(response)
   rescue RestClient::BadRequest => e
@@ -71,6 +61,19 @@ class MoviesClient
   rescue => e
     Rails.logger.error e.message
     raise CommunicationError
+  end
+
+  def calculate_authorization_param
+    "Bearer #{Rails.application.credentials.api_read_access_token}"
+  end
+
+  def calculate_api_params
+    {
+      query: normalized_query_string,
+      include_adult: false,
+      language: 'en-US',
+      page: page
+    }
   end
 
   def cache_key(type)
