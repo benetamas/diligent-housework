@@ -14,15 +14,16 @@
   margin-top: 20px;
 }
 
-#popup-alert {
-  position: fixed !important;
-  top: 1rem;
-  right: 1rem;
-  z-index: 1050;
-}
-
 .loader {
   width: 200px;
   height: 200px;
   margin-left: calc(100% / 2 - 100px);
+}
+
+.card {
+  height: 800px !important;
+
+  .card-body {
+    overflow: auto;
+  }
 }

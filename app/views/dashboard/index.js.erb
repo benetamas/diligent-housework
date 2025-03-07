@@ -1,14 +1,6 @@
 (function () {
     const movies = document.querySelector("#movies");
     movies.innerHTML = '<%= j render(template: 'dashboard/movies.html.erb') %>'
-
     window.linkAjaxEvents()
-
-    setTimeout(() => {
-        const popup = document.getElementById('popup-alert');
-        if (popup)
-            popup.style.display = 'none';
-        delete (popup)
-    }, 3000)
     window.history.pushState({}, '', '<%= html_escape(request.original_fullpath) %>')
 })();

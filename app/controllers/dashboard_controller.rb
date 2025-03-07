@@ -6,9 +6,17 @@ class DashboardController < ApplicationController
       format.html
       format.js
     end
-  rescue MoviesClient::CommunicationError
-    flash[:alert] = "Communication error with movies db API. Please try again later."
-    render template: "dashboard/error"
+  rescue => e
+    case e
+    when MoviesClient::CommunicationError
+      flash[:alert] = "Communication error with movies db API. Please try again later."
+    when MoviesClient::BadRequestError
+      flash[:alert] = "'Bad request' response from movies db API. Please try again."
+    end
+    respond_to do |format|
+      format.html { redirect_to root_path }
+      format.js { render template: "dashboard/error" }
+    end
   end
 
   private

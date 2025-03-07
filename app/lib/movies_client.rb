@@ -2,6 +2,7 @@
 # This class responsible to process movies list
 class MoviesClient
 
+  class BadRequestError < StandardError; end
   class CommunicationError < StandardError; end
 
   BASE_URL = "https://api.themoviedb.org/3/search/movie"
@@ -10,7 +11,7 @@ class MoviesClient
 
   def initialize(query_string, page = 1)
     @query_string = query_string.to_s
-    @page = (page || 1).to_i
+    @page = calculate_page(page)
     @data_source = 'cache'
   end
 
@@ -52,8 +53,8 @@ class MoviesClient
   end
 
   def get_movies_data_from_server
-    puts "Fetch from server, query: #{normalized_query_string}"
-    @data_source = 'server'
+    puts "Fetch from API, query: #{normalized_query_string}"
+    @data_source = 'API'
     response = RestClient::Request.execute(method: :get, url: BASE_URL, headers: {
       Authorization: "Bearer #{Rails.application.credentials.api_read_access_token}",
       params: {
@@ -64,6 +65,9 @@ class MoviesClient
       }
     })
     JSON.parse(response)
+  rescue RestClient::BadRequest => e
+    Rails.logger.error e.message
+    raise BadRequestError
   rescue => e
     Rails.logger.error e.message
     raise CommunicationError
@@ -76,4 +80,15 @@ class MoviesClient
   def normalized_query_string
     query_string.scan(/\S+/).sort.join(" ")
   end
+
+  private
+
+  def calculate_page(page)
+    if page.to_i == 0
+      1
+    else
+      page.to_i
+    end
+  end
+
 end

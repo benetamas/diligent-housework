@@ -1,9 +1,5 @@
 <div class="container">
 
-  <% if flash[:alert] %>
-    <p class="alert alert-danger"><%= flash[:alert] %></p>
-  <% end %>
-
   <%= form_with url: root_path, method: :get, local: false, id: :search do |f| %>
     <div class="row row-margin">
       <div class="col-10">
@@ -16,6 +12,10 @@
   <% end %>
 
   <div id="movies">
+    <% if flash[:alert] %>
+      <p class="alert alert-danger"><%= flash[:alert] %></p>
+    <% end %>
     <%= render template: 'dashboard/movies' %>
   </div>
+
 </div>
