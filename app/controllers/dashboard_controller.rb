@@ -22,11 +22,15 @@ class DashboardController < ApplicationController
   private
 
   def set_variables
-    @params = OpenStruct.new(params)
+    @params = OpenStruct.new(index_params)
     if @params.query.present?
       @client = MoviesClient.new(@params.query, @params.page)
       @movies = @client.search
     end
+  end
+
+  def index_params
+    params.permit(:query, :page)
   end
 
 end
