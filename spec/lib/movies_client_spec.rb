@@ -30,15 +30,52 @@ RSpec.describe MoviesClient do
     expect(client.page).to eq(1)
   end
 
-  # TODO search
+  context 'search' do
+
+    it 'data getting from cached successfully' do
+
+      Rails.cache.write(client.cache_key('page'), {
+        'page' => 1,
+        'total_pages' => 1,
+        'total_results' => 3,
+        'results' => [{ 'title' => 'lethal 1', }, { 'title' => 'lethal 2' }, { 'title' => 'lethal 3' }]
+      }, expires_in: 2.minutes)
+
+      Rails.cache.write(client.cache_key('hit'), 5)
+
+      movies = client.search
+
+      expect(movies).to be_kind_of(Movies)
+      expect(movies.size).to eq(3)
+      expect(movies.first.title).to eq('lethal 1')
+      expect(client.hit_count).to eq(6)
+    end
+
+    it 'data getting from server successfully' do
+      Rails.cache.delete(client.cache_key('page'))
+
+      allow(client).to receive(:get_movies_data_from_server).and_return({
+                                                                          'page' => 1,
+                                                                          'total_pages' => 1,
+                                                                          'total_results' => 3,
+                                                                          'results' => [{ 'title' => 'lethal 5', }, { 'title' => 'lethal 4' }]
+                                                                        })
+
+      movies = client.search
+
+      expect(movies).to be_kind_of(Movies)
+      expect(movies.size).to eq(2)
+      expect(movies.first.title).to eq('lethal 5')
+      expect(client.hit_count).to eq(0)
+    end
+
+  end
 
   it 'hit_count return value for "hit" cache key' do
     allow(Rails.cache).to receive(:read).with("query string test/hit/1").and_return(3)
 
     expect(client.hit_count).to eq(3)
   end
-
-  # TODO get_movies_data_from_server
 
   context 'get_movies_data_from_server' do
 
@@ -55,7 +92,7 @@ RSpec.describe MoviesClient do
       expect { client.get_movies_data_from_server }.to raise_error(MoviesClient::BadRequestError)
     end
 
-    it 'raise MoviesClient::CommunicationError if in the API call have any errir' do
+    it 'raise MoviesClient::CommunicationError if in the API call have any error' do
       allow(RestClient::Request).to receive(:execute).and_raise('unknown exception')
       expect { client.get_movies_data_from_server }.to raise_error(MoviesClient::CommunicationError)
     end
